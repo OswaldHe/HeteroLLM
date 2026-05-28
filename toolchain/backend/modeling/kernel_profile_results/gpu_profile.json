@@ -1,0 +1,6 @@
+{
+    "paged_kv_index_builder_us": 250.0, 
+    "inner_product_us": 82.5,
+    "topk_retrieval_us": 36.2,
+    "block_sparse_attention_us": 7.6
+}

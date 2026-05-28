@@ -1,0 +1,31 @@
+{
+    "gpu_to_fpga": [
+        {
+            "upperbound": 128,
+            "slope": 0.0572196,
+            "intercept": 0.146988822
+        },
+        {
+            "upperbound": -1,
+            "slope": 0.0,
+            "intercept": 4.0
+        }
+    ],
+    "fpga_to_gpu": [
+        {
+            "upperbound": 128,
+            "slope": 0.04026108541,
+            "intercept": 0.2636861476
+        },
+        {
+            "upperbound": 65536,
+            "slope": 0.00003572910652,
+            "intercept": 4.135097206
+        },
+        {
+            "upperbound": -1,
+            "slope": 0.0,
+            "intercept": 6.09
+        }
+    ]
+}

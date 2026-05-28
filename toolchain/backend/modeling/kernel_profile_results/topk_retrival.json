@@ -1,0 +1,36 @@
+{
+  "function_name": "run_cpu_kernel",
+  "fpga_device": "dsp48e2",
+  "target_freq_mhz": 250.0,
+  "operation_counts": {
+    "loads": 0,
+    "stores": 0,
+    "fadd": 1,
+    "fsub": 0,
+    "fmul": 0,
+    "fdiv": 0,
+    "fmadd": 0,
+    "iadd": 0,
+    "isub": 0,
+    "imul": 0,
+    "idiv": 0,
+    "total_memory_ops": 0,
+    "total_flops": 1,
+    "total_int_ops": 0
+  },
+  "roofline": {
+    "arithmetic_intensity": 3.0281007751937984e-05,
+    "ridge_point": 3.846547314578005,
+    "memory_bound_cycles": 21.115089514066497,
+    "compute_bound_cycles": 0.00016622340425531914,
+    "estimated_cycles": 28.115089514066497,
+    "estimated_latency_us": 10.1246035805626599,
+    "bottleneck": "MEMORY-BOUND"
+  },
+  "estimated_iterations": 1,
+  "memory_bytes": 33024,
+  "memory_transactions": {
+    "score": 32768,
+    "retrieved_index": 256
+  }
+}

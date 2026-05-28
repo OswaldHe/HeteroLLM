@@ -1,0 +1,9 @@
+*/*/cache
+*/*/__pycache__
+*/*/export
+*.out
+*/*/.claude
+*/*/.codex
+*/*/build
+*/*/*.log
+__pycache__

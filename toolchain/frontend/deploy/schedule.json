@@ -1,0 +1,42 @@
+{
+    "build_memory" : [
+        {
+            "retrieved_data": 4096,
+            "config": "fpga" 
+        }, 
+        {
+            "retrieved_data": -1,
+            "config": "gpu"
+        }
+    ],
+    "manage_memory_and_apply" : [
+        {
+            "retrieved_data": 4096,
+            "memory": 4096,
+            "query": 1,
+            "output": 1,
+            "config": ["fpga", "fpga", "gpu"]
+        },
+        {
+            "retrieved_data": -1,
+            "memory": -1,
+            "query": 1,
+            "output": 1,
+            "config": ["gpu", "gpu", "gpu"]
+        }
+    ],
+    "build_and_apply_memory" : [
+        {
+            "retrieved_data": 4096,
+            "query": 1,
+            "output": 1,
+            "config": ["gpu", "fpga", "fpga", "gpu"]
+        },
+        {
+            "retrieved_data": -1,
+            "query": 1,
+            "output": 1,
+            "config": ["gpu", "gpu", "gpu", "gpu"]
+        }
+    ]
+}

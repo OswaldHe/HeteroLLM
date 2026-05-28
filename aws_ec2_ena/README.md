@@ -1,0 +1,1 @@
+This example uses an AFI with XDMA support, provided as private preview by AWS.

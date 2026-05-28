@@ -1,0 +1,36 @@
+# Build artifacts
+build_*/
+.ipcache/
+*.xclbin
+*.xo
+*.ltx
+*.log
+connectivity.cfg
+emconfig.json
+*.link_summary
+*.compile_summary
+
+# Compiled binaries
+simple
+host
+p2p_simple
+p2p_transfer
+spmv_p2p_demo
+spmv_demo
+spmv_bm25_demo
+
+# Pre-built FPGA kernels (large files)
+indexer_bm25_fixed.xclbin
+
+# Temporary files
+*.tmp
+*.swp
+*~
+.DS_Store
+
+# Vivado/Vitis generated
+.Xil/
+*.jou
+*.str
+*.zip
+_x/

@@ -1,0 +1,7 @@
+{
+    "build_memory": ["cpu"],
+    "compute_score": ["cpu"],
+    "memory_retrieval": ["cpu"],
+    "apply_memory": ["cpu"],
+    "seq_len": [2048, 4096, 8192, 16384, 32768, 65536]
+}

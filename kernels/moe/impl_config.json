@@ -1,0 +1,10 @@
+{
+  "vitis_platform": "xilinx_u55c_gen3x16_xdma_3_202210_1",
+  "port_to_clock_period": {
+    "ap_clk": 3.33
+  },
+  "placement_strategy": "Explore",
+  "max_workers": 2,
+  "max_synth_jobs": 16,
+  "is_versal": false
+}

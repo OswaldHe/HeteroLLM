@@ -1,0 +1,19 @@
+# RAG Pipeline Dependencies
+# Install with: pip install -r requirements.txt
+
+# Core ML libraries
+torch>=2.0.0
+transformers>=4.35.0
+datasets>=2.14.0
+
+# vLLM for fast inference
+vllm>=0.4.0
+
+# BM25S retriever
+bm25s>=0.2.0
+
+# Tokenization (required by BM25S)
+PyStemmer>=2.0.0
+
+# Optional: for faster tokenization
+# Stemmer>=0.1.0
