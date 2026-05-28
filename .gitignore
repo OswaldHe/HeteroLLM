@@ -6,4 +6,5 @@
 */*/.codex
 */*/build
 */*/*.log
+.agents
 __pycache__
