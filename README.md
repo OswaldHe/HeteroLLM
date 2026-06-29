@@ -1,4 +1,5 @@
 # HeteroLLM
+**WIP: Detail and accurate documentation will come later.**
 
 HeteroLLM is an AI infrastructure research framework for serving LLM memory
 workloads across CPUs, GPUs, and FPGAs. The repository combines a typed C++
