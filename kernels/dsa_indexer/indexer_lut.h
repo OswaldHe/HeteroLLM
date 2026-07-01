@@ -17,10 +17,15 @@ constexpr int NUM_INDEX_HEAD = 16;
 constexpr int HEAD_DIM = 128;
 constexpr int HEAD_DIM_DIV_2 = HEAD_DIM / 2;
 constexpr int DIM_PER_PE = HEAD_DIM / 8;
-constexpr int TOP_K = 64;
+constexpr int TOP_K = 2048; // 64
 constexpr int K_CODEBOOK_SIZE = 64;
 constexpr int K_CODEBOOK_SIZE_DIV_4 = K_CODEBOOK_SIZE / 4;
 constexpr int Q_CODEBOOK_SIZE = 64;
+
+// TOP_K must be a multiple of 16 (packed 16 lanes at a time) and a power of two
+// (topk_parallel_cmp reduces over all TOP_K entries with a binary tree).
+static_assert(TOP_K >= 16 && (TOP_K & (TOP_K - 1)) == 0,
+              "TOP_K must be a power of two and at least 16");
 
 // 8x channels
 // void read_qk_vec(
@@ -523,6 +528,37 @@ void weighted_sum_add(
     }
 }
 
+// Compile-time binary reduction that returns the smallest score (bits [31:0])
+// among topk_node[OFF, OFF+N) together with its absolute index. Everything is
+// inlined, so it lowers to the same hand-unrolled comparator tree the previous
+// fixed-size (TOP_K==64) code produced, but for any power-of-two size.
+template<int OFF, int N>
+struct topk_argmin {
+    static void run(ap_uint<64> topk_node[TOP_K], float& min_score, int& min_idx) {
+        #pragma HLS inline
+        float lo_score, hi_score;
+        int lo_idx, hi_idx;
+        topk_argmin<OFF, N / 2>::run(topk_node, lo_score, lo_idx);
+        topk_argmin<OFF + N / 2, N / 2>::run(topk_node, hi_score, hi_idx);
+        if(hi_score < lo_score) {
+            min_score = hi_score;
+            min_idx = hi_idx;
+        } else {
+            min_score = lo_score;
+            min_idx = lo_idx;
+        }
+    }
+};
+
+template<int OFF>
+struct topk_argmin<OFF, 1> {
+    static void run(ap_uint<64> topk_node[TOP_K], float& min_score, int& min_idx) {
+        #pragma HLS inline
+        min_score = tapa::bit_cast<float>(ap_uint<32>(topk_node[OFF](31, 0)));
+        min_idx = OFF;
+    }
+};
+
 void topk_parallel_cmp(
     const int L,
     tapa::istream<tapa::vec_t<ap_uint<64>, 16>>& score_id_fifo,
@@ -620,96 +656,8 @@ void topk_parallel_cmp(
 
                 if(tapa::bit_cast<float>(ap_uint<32>(score_id_pack[i](31, 0))) > min_score) {
                     topk_node[min_idx] = score_id_pack[i];
-                    // binary reduction parallel min search
-                    float min_score_b[64];
-                    #pragma HLS array_partition variable=min_score_b complete
-                    for(int i = 0; i < 64; i++){
-                        #pragma HLS unroll
-                        min_score_b[i] = tapa::bit_cast<float>(ap_uint<32>(topk_node[i](31, 0)));
-                    }
-
-                    float min_score_r[32];
-                    int min_idx_r[32];
-                    #pragma HLS array_partition variable=min_score_r complete
-                    #pragma HLS array_partition variable=min_idx_r complete
-                    for(int i = 0; i < 32; i++){
-                        #pragma HLS unroll
-                        if(min_score_b[i*2] < min_score_b[i*2+1]) {
-                            min_score_r[i] = min_score_b[i*2];
-                            min_idx_r[i] = i*2;
-                        } else {
-                            min_score_r[i] = min_score_b[i*2+1];
-                            min_idx_r[i] = i*2+1;
-                        }
-                    }
-
-                    float min_score_r_2[16];
-                    int min_idx_r_2[16];
-                    #pragma HLS array_partition variable=min_score_r_2 complete
-                    #pragma HLS array_partition variable=min_idx_r_2 complete
-                    for(int i = 0; i < 16; i++){
-                        #pragma HLS unroll
-                        if(min_score_r[i*2] < min_score_r[i*2+1]) {
-                            min_score_r_2[i] = min_score_r[i*2];
-                            min_idx_r_2[i] = min_idx_r[i*2];
-                        } else {
-                            min_score_r_2[i] = min_score_r[i*2+1];
-                            min_idx_r_2[i] = min_idx_r[i*2+1];
-                        }
-                    }
-
-                    float min_score_r_3[8];
-                    int min_idx_r_3[8];
-                    #pragma HLS array_partition variable=min_score_r_3 complete
-                    #pragma HLS array_partition variable=min_idx_r_3 complete
-                    for(int i = 0; i < 8; i++){
-                        #pragma HLS unroll
-                        if(min_score_r_2[i*2] < min_score_r_2[i*2+1]) {
-                            min_score_r_3[i] = min_score_r_2[i*2];
-                            min_idx_r_3[i] = min_idx_r_2[i*2];
-                        } else {
-                            min_score_r_3[i] = min_score_r_2[i*2+1];
-                            min_idx_r_3[i] = min_idx_r_2[i*2+1];
-                        }
-                    }
-
-                    float min_score_r_4[4];
-                    int min_idx_r_4[4];
-                    #pragma HLS array_partition variable=min_score_r_4 complete
-                    #pragma HLS array_partition variable=min_idx_r_4 complete
-                    for(int i = 0; i < 4; i++){
-                        #pragma HLS unroll
-                        if(min_score_r_3[i*2] < min_score_r_3[i*2+1]) {
-                            min_score_r_4[i] = min_score_r_3[i*2];
-                            min_idx_r_4[i] = min_idx_r_3[i*2];
-                        } else {
-                            min_score_r_4[i] = min_score_r_3[i*2+1];
-                            min_idx_r_4[i] = min_idx_r_3[i*2+1];
-                        }
-                    }
-
-                    float min_score_r_5[2];
-                    int min_idx_r_5[2];
-                    #pragma HLS array_partition variable=min_score_r_5 complete
-                    #pragma HLS array_partition variable=min_idx_r_5 complete
-                    for(int i = 0; i < 2; i++){
-                        #pragma HLS unroll
-                        if(min_score_r_4[i*2] < min_score_r_4[i*2+1]) {
-                            min_score_r_5[i] = min_score_r_4[i*2];
-                            min_idx_r_5[i] = min_idx_r_4[i*2];
-                        } else {
-                            min_score_r_5[i] = min_score_r_4[i*2+1];
-                            min_idx_r_5[i] = min_idx_r_4[i*2+1];
-                        }
-                    }
-
-                    if(min_score_r_5[0] < min_score_r_5[1]) {
-                        min_score = min_score_r_5[0];
-                        min_idx = min_idx_r_5[0];
-                    } else {
-                        min_score = min_score_r_5[1];
-                        min_idx = min_idx_r_5[1];
-                    }
+                    // binary reduction parallel min search over all TOP_K entries
+                    topk_argmin<0, TOP_K>::run(topk_node, min_score, min_idx);
                 }
             }
         }
